@@ -92,4 +92,4 @@ def ingest_pdf_with_graph(path):
 
 
 if __name__ == "__main__":
-    ingest_pdf_with_graph("sample.pdf")
+    ingest_pdf_with_graph("atlas-ai-kg/sample.pdf")
