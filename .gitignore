@@ -17,6 +17,8 @@ dist/
 *.whl
 
 # Virtual environments
+*.env
+*.venv
 venv/
 env/
 ENV/
