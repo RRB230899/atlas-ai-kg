@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, HTTPException, Query
 from backend.ingestion.ingest_with_graph import ingest_pdf_with_graph
-from backend.fastapi.app import get_conn, model
+from backend.fastapi.utils import get_conn, model
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_fixed
 from neo4j import GraphDatabase
