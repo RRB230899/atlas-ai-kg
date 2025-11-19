@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from backend.ingestion.ingest_with_graph import ingest_pdf_with_graph
 from backend.fastapi.utils import get_conn, model
 from dotenv import load_dotenv
@@ -17,6 +18,13 @@ NEO_USER = os.getenv("NEO_USER")
 NEO_PASSWORD = os.getenv("NEO_PASSWORD")
 
 app = FastAPI(title="ATLAS API", version="0.3")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # --- Neo4j Driver with Retries ---
