@@ -2,6 +2,7 @@ import spacy
 import psycopg2
 import os
 import logging
+from psycopg2.extras import execute_values
 from .ingest import ingest_pdf
 
 # --- Setup logging ---
@@ -48,51 +49,110 @@ def ingest_pdf_with_graph(path, driver):
             port=5432
         )
         cur = conn.cursor()
+        logging.info("Connected to PostgreSQL successfully.")
     except psycopg2.OperationalError as e:
         logging.error(f"Postgres connection failed: {e}")
         return None
 
     # --- Ingest into Postgres ---
-    document_id, chunks = ingest_pdf(path)
-    if not document_id or not chunks:
-        logging.warning(f"No chunks inserted for '{path}', skipping Neo4j ingestion.")
+    try:
+        document_id, chunks = ingest_pdf(path)
+        if not document_id or not chunks:
+            logging.warning(f"No chunks inserted for '{path}', skipping Neo4j ingestion.")
+            conn.close()
+            return None
+    except Exception as e:
+        logging.error(f"Error during PDF ingestion: {e}")
         conn.close()
         return None
 
+    # --- Prepare entity insert buffer ---
+    entity_records = []
+    chunk_entity_records = []
+
     # --- NER + Neo4j ---
     with driver.session() as session:
-        for i, chunk in enumerate(chunks):
-            chunk_id, text = chunk
+        for i, (chunk_id, text) in enumerate(chunks):
             if not text.strip():
                 logging.info(f"Skipping empty chunk {i}")
                 continue
 
             try:
-                # Upsert chunk node
+                # Upsert chunk node in Neo4j
                 session.execute_write(upsert_chunk, f"{document_id}_{i}", text)
-                logging.info(f"Upserted chunk node {i} (ID={document_id}_{i})")
 
                 # Apply NER
                 doc = nlp(text)
                 if not doc.ents:
-                    logging.info(f"No entities found in chunk {i}")
                     continue
 
                 logging.info(f"Found {len(doc.ents)} entities in chunk {i}")
-                for ent in doc.ents:
-                    # Upsert entity node
-                    session.execute_write(upsert_entity, ent.text, ent.label_)
-                    logging.info(f"Upserted entity '{ent.text}' (label={ent.label_})")
 
-                    # Link chunk -> entity
-                    session.execute_write(upsert_mention, f"{document_id}_{i}", ent.text)
-                    logging.info(f"Linked chunk {i} -> entity '{ent.text}'")
+                for ent in doc.ents:
+                    name, etype = ent.text.strip(), ent.label_
+
+                    # Skip short or junk entities
+                    if len(name) < 2:
+                        continue
+
+                    # Collect for Postgres
+                    entity_records.append((name, etype))
+                    chunk_entity_records.append((chunk_id, name))
+
+                    # Upsert into Neo4j
+                    session.execute_write(upsert_entity, name, etype)
+                    session.execute_write(upsert_mention, f"{document_id}_{i}", name)
 
             except Exception as e:
                 logging.error(f"Failed processing chunk {i}: {e}")
                 continue
 
-    conn.close()
-    driver.close()
+    # --- Insert into Postgres tables ---
+    try:
+        # --- Insert entities ---
+        if entity_records:
+            # Deduplicate by entity name
+            unique_entities = {e[0]: e for e in entity_records}.values()
+            execute_values(cur, """
+                INSERT INTO entity (name, type)
+                VALUES %s
+                ON CONFLICT (name) DO UPDATE SET type = EXCLUDED.type
+            """, list(unique_entities))
+            logging.info(f"Inserted {len(unique_entities)} unique entities into PostgreSQL.")
+
+        # --- Insert chunk-entity relations ---
+        if chunk_entity_records:
+            # Fetch existing chunk UUIDs from Postgres
+            cur.execute("SELECT id::text FROM chunk")
+            existing_chunks = set(r[0] for r in cur.fetchall())
+
+            # Map Neo4j chunk IDs to actual UUIDs
+            mapped_relations = []
+            for chunk_id, entity_name in chunk_entity_records:
+                actual_uuid = chunk_id.split("_")[0]  # Extract the UUID part
+                if actual_uuid in existing_chunks:
+                    mapped_relations.append((actual_uuid, entity_name))
+
+            if mapped_relations:
+                execute_values(cur, """
+                    INSERT INTO chunk_entity (chunk_id, entity_id)
+                    SELECT ce.chunk_id::uuid, e.id
+                    FROM (VALUES %s) AS ce(chunk_id, entity_name)
+                    JOIN entity e ON e.name = ce.entity_name
+                    ON CONFLICT DO NOTHING
+                """, mapped_relations)
+                logging.info(f"Inserted {len(mapped_relations)} chunk-entity links into PostgreSQL.")
+
+        conn.commit()
+        logging.info("Successfully committed all entity and chunk-entity inserts.")
+
+    except Exception as e:
+        logging.error(f"Postgres insert error: {e}")
+        conn.rollback()
+
+    finally:
+        conn.close()
+        driver.close()
+
     logging.info(f"Finished ingestion with graph for '{path}'")
     return document_id
