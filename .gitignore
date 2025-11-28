@@ -96,3 +96,6 @@ docker-compose-data/
 .DS_Store
 Thumbs.db
 *.swp
+ColBERT
+*.parquet
+*.tsv
