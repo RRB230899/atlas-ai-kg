@@ -98,3 +98,4 @@ Thumbs.db
 *.swp
 ColBERT
 *.parquet
+*.tsv
