@@ -66,14 +66,14 @@ export const fetchSubgraph = async (entityName) => {
 //   }
 // };
 
-// export async function searchRAGWithGraph(q, top_k = 5, use_colbert = false) {
-//   try {
-//     const res = await api.post(buildUrl("/search_rag_plus_graph"), {
-//       q, top_k, use_colbert, with_graph: true
-//     });
-//     return res.data; // {hits: [...], graph: {nodes:[], edges:[]}}
-//   } catch (err) {
-//     console.error("[searchRAGWithGraph] HTTP error:", err.response?.status, err.response?.data);
-//     throw err;
-//   }
-// }
+export async function searchRAGWithGraph(q, top_k = 5, use_colbert = false) {
+  try {
+    const res = await api.post(buildUrl("/search_rag_plus_graph"), {
+      q, top_k, use_colbert, with_graph: true
+    });
+    return res.data; // {hits: [...], graph: {nodes:[], edges:[]}}
+  } catch (err) {
+    console.error("[searchRAGWithGraph] HTTP error:", err.response?.status, err.response?.data);
+    throw err;
+  }
+}
