@@ -25,7 +25,7 @@ export default function GraphView({ elements }) {
     // Double-click chunks to show full preview
     cy.on('dbltap', 'node[type="chunk"]', (evt) => {
       const data = evt.target.data();
-      alert(`Chunk ${data.ord}:\n\n${data.preview || data.label}`);
+      // alert(`Chunk ${data.ord}:\n\n${data.preview || data.label}`);
     });
   };
 
@@ -33,7 +33,7 @@ export default function GraphView({ elements }) {
     <div className="w-full h-full bg-[#0b0f1a] p-2 relative">
       <CytoscapeComponent
         elements={elements}
-        style={{ width: "100%", height: "100%", paddingBottom: "140px", paddingLeft: "200px" }}
+        style={{ width: "100%", height: "100%", paddingBottom: "40px", paddingLeft: "20px" }}
         cy={handleCyInit}
         layout={{
           name: "cose",
@@ -45,12 +45,10 @@ export default function GraphView({ elements }) {
           animationDuration: 1000,
           componentSpacing: 100,
           coolingFactor: 0.95,
-          padding: 30  // Add padding around the graph
+          padding: 30
         }}
         stylesheet={[
-          // ========================================
           // DOCUMENT NODES (Papers/PDFs)
-          // ========================================
           {
             selector: 'node[type="doc"]',
             style: {
@@ -77,9 +75,7 @@ export default function GraphView({ elements }) {
             }
           },
 
-          // ========================================
           // CHUNK NODES (Text snippets)
-          // ========================================
           {
             selector: 'node[type="chunk"]',
             style: {
@@ -106,9 +102,7 @@ export default function GraphView({ elements }) {
             }
           },
 
-          // ========================================
           // ENTITY NODES (Color-coded by type)
-          // ========================================
           {
             selector: 'node[type="entity"]',
             style: {
@@ -177,9 +171,7 @@ export default function GraphView({ elements }) {
             }
           },
 
-          // ========================================
           // HOVER & SELECTED STATES
-          // ========================================
           {
             selector: "node:hover",
             style: {
@@ -200,9 +192,7 @@ export default function GraphView({ elements }) {
             }
           },
 
-          // ========================================
           // EDGES (Relationships)
-          // ========================================
           {
             selector: "edge",
             style: {
