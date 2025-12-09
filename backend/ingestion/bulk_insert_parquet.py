@@ -68,7 +68,7 @@ def bulk_insert(parquet_path):
     cur.close()
     conn.close()
 
-    logging.info("🔥 Bulk insert complete!")
+    logging.info("Bulk insert complete!")
 
 
 if __name__ == "__main__":

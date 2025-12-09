@@ -1,16 +1,18 @@
-from fastapi import FastAPI, UploadFile, HTTPException, Query
+from fastapi import FastAPI, UploadFile, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from backend.ingestion.ingest_with_graph import ingest_pdf_with_graph
-from backend.fastapi.utils import get_conn, model
+from backend.fastapi.utils import get_conn, model, build_graph_for_chunks
+# from backend.routes.ask_openai import router as ask_openai
 from dotenv import load_dotenv
-from tenacity import retry, stop_after_attempt, wait_fixed
 from neo4j import GraphDatabase
+from pydantic import BaseModel
 from collections import defaultdict
 import os
 import logging
 
 # --- Setup logging ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("uvicorn.error")
 
 # --- Load Neo4j env ---
 load_dotenv()
@@ -21,17 +23,40 @@ NEO_PASSWORD = os.getenv("NEO_PASSWORD")
 app = FastAPI(title="ATLAS API", version="0.3")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,           # if you ever need cookies/Authorization with fetch(..., credentials:'include')
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# app.include_router(ask_openai)
 
 
-# --- Neo4j Driver with Retries ---
-@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
-def get_neo4j_driver():
-    return GraphDatabase.driver(NEO_URI, auth=(NEO_USER, NEO_PASSWORD))
+class SearchBody(BaseModel):
+    q: str
+    top_k: int = 5
+    use_colbert: bool = False
+    with_graph: bool = True
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info("REQ %s %s", request.method, request.url.path)
+    resp = await call_next(request)
+    logger.info("RES %s %s -> %s", request.method, request.url.path, resp.status_code)
+    return resp
+
+
+# --- Neo4j Driver ---
+logger.info("Neo4j URI in backend: %s", NEO_URI)
+neo_driver = GraphDatabase.driver(NEO_URI, auth=(NEO_USER, NEO_PASSWORD))
+
+
+@app.on_event("shutdown")
+def _close_neo():
+    try:
+        neo_driver.close()
+    except Exception:
+        pass
 
 
 # --- Ingestion endpoint ---
@@ -43,8 +68,7 @@ async def ingest_file(file: UploadFile):
             f.write(await file.read())
         logging.info(f"Received file '{file.filename}', saved to {temp_path}")
 
-        driver = get_neo4j_driver()
-        document_id = ingest_pdf_with_graph(temp_path, driver)
+        document_id = ingest_pdf_with_graph(temp_path, neo_driver)
         if document_id is None:
             raise HTTPException(status_code=400, detail="Failed to ingest document. Check logs.")
         logging.info(f"Ingestion successful, document_id={document_id}")
@@ -58,8 +82,10 @@ async def ingest_file(file: UploadFile):
         if os.path.exists(temp_path):
             try: os.remove(temp_path)
             except Exception: pass
-        try: driver.close()
-        except Exception: pass
+        try: 
+            neo_driver.close()
+        except Exception: 
+            pass
 
 
 # --- Search endpoint (simple vector search) ---
@@ -104,9 +130,8 @@ async def search_with_entities(q: str = Query(..., min_length=1), k: int = 5):
         raise HTTPException(status_code=400, detail=f"Embedding dimension mismatch: got {len(emb)}")
 
     conn = get_conn()
-    driver = get_neo4j_driver()
     try:
-        with conn.cursor() as cur, driver.session() as session:
+        with conn.cursor() as cur, neo_driver.session() as session:
             # 1️⃣ Get top-k chunks
             cur.execute(
                 """
@@ -143,7 +168,7 @@ async def search_with_entities(q: str = Query(..., min_length=1), k: int = 5):
 
     finally:
         conn.close()
-        driver.close()
+        neo_driver.close()
 
 
 @app.get("/search_docs")
@@ -157,7 +182,6 @@ async def search_docs(q: str = Query(..., min_length=1), top_k_docs: int = 5, to
         raise HTTPException(status_code=400, detail=f"Embedding dimension mismatch: got {len(emb)}")
 
     conn = get_conn()
-    driver = get_neo4j_driver()
     try:
         with conn.cursor() as cur:
             # Step 1: retrieve top 50 chunks to have a good doc-level aggregation
@@ -190,7 +214,7 @@ async def search_docs(q: str = Query(..., min_length=1), top_k_docs: int = 5, to
         docs_sorted = sorted(docs, key=lambda x: x["avg_distance"])[:top_k_docs]
 
         # Step 4: Optionally fetch entities per document
-        with driver.session() as session:
+        with neo_driver.session() as session:
             for doc in docs_sorted:
                 ents = session.run(
                     """
@@ -205,7 +229,7 @@ async def search_docs(q: str = Query(..., min_length=1), top_k_docs: int = 5, to
 
     finally:
         conn.close()
-        driver.close()
+        neo_driver.close()
 
 
 @app.get("/search_rag")
@@ -239,6 +263,7 @@ def search_rag(
             """
             SELECT c.id::text AS chunk_id,
                    c.document_id::text AS document_id,
+                   c.ord, 
                    c.text,
                    (c.embedding <-> %s::vector) AS distance
             FROM chunk c
@@ -254,8 +279,12 @@ def search_rag(
         # 3) Aggregate chunks by document
         docs_tmp = defaultdict(lambda: {"chunks": [], "agg_scores": []})
         chunk_ids = []
-        for chunk_id, document_id, text, distance in rows:
-            docs_tmp[document_id]["chunks"].append({"chunk_id": chunk_id, "text": text, "distance": float(distance)})
+        for chunk_id, document_id, ord_, text, distance in rows:
+            docs_tmp[document_id]["chunks"].append({
+                "chunk_id": chunk_id, 
+                "ord": ord_,
+                "text": text, 
+                "distance": float(distance)})
             docs_tmp[document_id]["agg_scores"].append(float(distance))
             chunk_ids.append(chunk_id)
 
@@ -344,3 +373,102 @@ def search_rag(
     finally:
         cur.close()
         conn.close()
+
+import inspect
+logger = logging.getLogger("uvicorn.error")
+logger.info("search_rag ref=%r module=%s", search_rag, getattr(search_rag, "__module__", "?"))
+try:
+    logger.info("search_rag signature: %s", inspect.signature(search_rag))
+except Exception:
+    logger.info("search_rag signature: <unavailable>")
+
+
+@app.post("/search_rag_plus_graph")
+def search_rag_plus_graph(body: SearchBody):
+    """
+    Combined RAG search + graph visualization endpoint.
+    Returns both search hits and a graph of relationships.
+    """
+    try:
+        # Import search_rag from utils
+        from backend.fastapi.utils import search_rag as rag_search_func
+        
+        # Call search_rag with correct parameters
+        rag = rag_search_func(
+            query=body.q,           # ✅ Fixed: use 'query' parameter
+            top_docs=body.top_k,    # ✅ Number of documents
+            top_chunks=3,           # Chunks per document
+            chunk_pool=200,         # Initial pool of chunks to consider
+            include_entities=True   # Include entity information
+        )
+    except Exception as e:
+        logger.exception("search_rag failed")
+        rag = {"results": []}
+
+    # ---- Flatten RAG results to "hits" that the UI understands ----
+    hits = []
+    for d in rag.get("results", []):
+        sha = d.get("sha256")
+        title = d.get("title")
+        doc_id = d.get("document_id")
+        
+        for c in d.get("chunks", []):
+            hits.append({
+                "text": c.get("text", ""),
+                "score": -c.get("distance", 0.0),  # Invert distance (smaller = better)
+                "sha256": sha,
+                "ord": c.get("ord"),
+                "chunk_id": c.get("chunk_id"),
+                "title": title,
+                "document_id": doc_id
+            })
+    
+    # Sort by score (descending) and limit results
+    hits = sorted(hits, key=lambda h: h["score"], reverse=True)[: body.top_k * 3]
+
+    # ---- Build knowledge graph if requested ----
+    # Graph structure returned:
+    # - Document nodes: { id, label (title), type: "doc", fullTitle, sourceUrl }
+    # - Chunk nodes: { id, label (80-char preview), type: "chunk", ord, preview (200 chars), sha256 }
+    # - Entity nodes: { id, label (name + type), type: "entity", entityType, name }
+    # - Edges: { id, source, target, label (relationship type) }
+    graph = {"nodes": [], "edges": []}
+    if body.with_graph and hits:
+        # Build chunk keys for graph construction
+        keys = []
+        for h in hits:
+            sha = h.get("sha256")
+            ord_val = h.get("ord")
+            
+            # Only include if we have both sha256 and ord
+            if sha and ord_val is not None:
+                try:
+                    keys.append({
+                        "sha256": str(sha),
+                        "ord": int(ord_val)
+                    })
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Invalid key sha256={sha} ord={ord_val}: {e}")
+                    continue
+
+        logger.info(f"Building graph with {len(keys)} chunk keys (sample: {keys[:3]})")
+
+        if keys:
+            try:
+                graph = build_graph_for_chunks(
+                    chunk_keys=keys,
+                    max_ent_per_chunk=4,  # Limit entities per chunk to avoid clutter
+                    max_com_edges=120,     # Unused but kept for compatibility
+                    neo_driver=neo_driver
+                )
+                logger.info(f"Graph built successfully with enhanced metadata")
+            except Exception as e:
+                logger.exception("build_graph_for_chunks failed")
+                graph = {"nodes": [], "edges": []}
+
+    logger.info(
+        f"search_rag_plus_graph: query='{body.q}' hits={len(hits)} "
+        f"graph_nodes={len(graph.get('nodes', []))} graph_edges={len(graph.get('edges', []))}"
+    )
+    
+    return {"hits": hits, "graph": graph}
