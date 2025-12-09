@@ -4,50 +4,76 @@ import ChatWindow from "./components/ChatWindow";
 import { makeChatTitle } from "./utils/chatLogger";
 
 function App() {
-  const [history, setHistory] = useState([]);
-  const [activeChat, setActiveChat] = useState(null);
+  const [history, setHistory] = useState([
+    // Start with one empty chat
+    { title: "New Chat", messages: [], graphData: null }
+  ]);
+  const [activeChat, setActiveChat] = useState(0);
 
+  // Load from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("atlas_history");
-    if (saved) setHistory(JSON.parse(saved));
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.length > 0) {
+          setHistory(parsed);
+          setActiveChat(0);
+        }
+      } catch (error) {
+        console.error("Failed to load history:", error);
+      }
+    }
   }, []);
 
+  // Save to localStorage whenever history changes
   useEffect(() => {
-    localStorage.setItem("atlas_history", JSON.stringify(history));
+    if (history.length > 0) {
+      localStorage.setItem("atlas_history", JSON.stringify(history));
+    }
   }, [history]);
   
   // New Chat Handler
   const startNewChat = () => {
-    const newChat = { title: "New Chat", messages: [] };
+    const newChat = { 
+      title: "New Chat", 
+      messages: [],
+      graphData: null
+    };
     setHistory((prev) => [...prev, newChat]);
-    setActiveChat(history.length); // index of new chat
+    setActiveChat(history.length); // Switch to the new chat
   };
 
-  // Create a chat automatically if none exists
-  const ensureChatExists = () => {
-    if (activeChat !== null) return activeChat;
-
-    const newChat = { title: "New Chat", messages: [] };
-    setHistory((prev) => [...prev, newChat]);
-
-    const newIndex = history.length;
-    setActiveChat(newIndex);
-
-    return newIndex;
-  };
-
-  // Update the chat's messages
+  // Update the active chat's messages
   const updateActiveChat = (messages) => {
-    const index = ensureChatExists();
-
     setHistory((prev) => {
       const updated = [...prev];
-      updated[index] = {
+      updated[activeChat] = {
+        ...updated[activeChat],
         title: makeChatTitle(messages),
         messages,
       };
       return updated;
     });
+  };
+
+  // Update graph data for active chat
+  const handleUpdateGraph = (graphElements) => {
+    setHistory((prev) => {
+      const updated = [...prev];
+      updated[activeChat] = {
+        ...updated[activeChat],
+        graphData: graphElements
+      };
+      return updated;
+    });
+  };
+
+  // Get current chat safely
+  const currentChat = history[activeChat] || { 
+    title: "New Chat", 
+    messages: [], 
+    graphData: null 
   };
 
   return (
@@ -59,8 +85,11 @@ function App() {
       />
 
       <ChatWindow
-        messages={history[activeChat]?.messages || []}
+        key={activeChat}
+        messages={currentChat.messages}
+        graphData={currentChat.graphData}
         onUpdateMessages={updateActiveChat}
+        onUpdateGraph={handleUpdateGraph}
       />
     </div>
   );
