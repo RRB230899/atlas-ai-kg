@@ -563,7 +563,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ![Knowledge Graph](docs/screenshots/Knowledge%20Graph.png)
 
 ### API Documentation (Swagger)
-![API Docs](docs/screenshots/API%20DOCS.png)
+![API Docs](docs/screenshots/API%20Docs.png)
 
 ---
 
