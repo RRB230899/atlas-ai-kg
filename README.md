@@ -557,13 +557,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📸 Screenshots
 
 ### Chat Interface with Graph Visualization
-![Chat Interface](docs/screenshots/chat-interface.png)
+![Chat Interface](docs/screenshots/Chat Interface.png)
 
 ### Knowledge Graph Explorer
-![Knowledge Graph](docs/screenshots/knowledge-graph.png)
+![Knowledge Graph](docs/screenshots/Knowledge Graph.png)
 
 ### API Documentation (Swagger)
-![API Docs](docs/screenshots/api-docs.png)
+![API Docs](docs/screenshots/API DOCS.png)
 
 ---
 
