@@ -82,8 +82,9 @@ build/
 *.log
 docker-compose.override.yml
 docker-compose.override.*.yml
-docker-compose.*.yml
-docker-compose*.yml
+# docker-compose.*.yml
+# docker-compose*.yml
+docker-compose-local.yml
 .docker/
 
 # Docker build cache

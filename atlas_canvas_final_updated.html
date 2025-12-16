@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATLAS: Graph-Aware RAG System</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; color: #333; background: #f8f9fa;">
+
+<div style="max-width: 1200px; margin: 0 auto; background: white; box-shadow: 0 0 40px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;">
+    
+    <!-- Hero Header -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 40px; text-align: center;">
+        <h1 style="font-size: 3.5em; margin: 0 0 20px 0; font-weight: 700;">🌐 ATLAS</h1>
+        <p style="font-size: 1.4em; margin: 0 0 15px 0; font-weight: 300;">Graph-Aware RAG System for Research Intelligence</p>
+        <p style="font-size: 1.15em; margin: 0 0 30px 0; max-width: 800px; margin-left: auto; margin-right: auto;">
+            Transform 10,000+ research PDFs into an intelligent, interconnected knowledge ecosystem with semantic search and explainable entity relationships
+        </p>
+        <a href="https://github.com/RRB230899/atlas-ai-kg" target="_blank" style="display: inline-block; background: white; color: #667eea; padding: 15px 40px; border-radius: 30px; text-decoration: none; font-weight: 600; margin-top: 10px;">
+            🔗 View on GitHub
+        </a>
+    </div>
+
+    <!-- Stats Bar -->
+    <div style="background: #f8f9fa; padding: 40px; text-align: center; border-bottom: 4px solid #667eea;">
+        <div style="display: inline-block; margin: 0 40px;">
+            <div style="font-size: 3em; font-weight: 700; color: #667eea;">10,000+</div>
+            <div style="font-size: 1.1em; color: #666;">Research Papers</div>
+        </div>
+        <div style="display: inline-block; margin: 0 40px;">
+            <div style="font-size: 3em; font-weight: 700; color: #667eea;">~200K</div>
+            <div style="font-size: 1.1em; color: #666;">Text Chunks</div>
+        </div>
+        <div style="display: inline-block; margin: 0 40px;">
+            <div style="font-size: 3em; font-weight: 700; color: #667eea;">~50K</div>
+            <div style="font-size: 1.1em; color: #666;">Unique Entities</div>
+        </div>
+        <div style="display: inline-block; margin: 0 40px;">
+            <div style="font-size: 3em; font-weight: 700; color: #667eea;">&lt;150ms</div>
+            <div style="font-size: 1.1em; color: #666;">Query Latency</div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div style="background: #ecf0f1; padding: 40px 50px; border-bottom: 4px solid #667eea;">
+        <h2 style="color: #2c3e50; margin: 0 0 25px 0; font-size: 1.8em;">📑 Quick Navigation</h2>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+            <a href="#overview" style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; text-decoration: none; color: #2c3e50; display: block;">
+                <div style="font-size: 1.5em; margin-bottom: 8px;">📋</div>
+                <div style="font-size: 1.1em; margin-bottom: 5px;">Product Overview</div>
+                <div style="font-size: 0.9em; color: #7f8c8d;">What Atlas does and why it matters</div>
+            </a>
+            <a href="#value" style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; text-decoration: none; color: #2c3e50; display: block;">
+                <div style="font-size: 1.5em; margin-bottom: 8px;">💡</div>
+                <div style="font-size: 1.1em; margin-bottom: 5px;">Value Proposition</div>
+                <div style="font-size: 0.9em; color: #7f8c8d;">Problems solved and advantages</div>
+            </a>
+            <a href="#differentiation" style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; text-decoration: none; color: #2c3e50; display: block;">
+                <div style="font-size: 1.5em; margin-bottom: 8px;">🎯</div>
+                <div style="font-size: 1.1em; margin-bottom: 5px;">Key Differentiators</div>
+                <div style="font-size: 0.9em; color: #7f8c8d;">What sets Atlas apart</div>
+            </a>
+            <a href="#architecture" style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; text-decoration: none; color: #2c3e50; display: block;">
+                <div style="font-size: 1.5em; margin-bottom: 8px;">🏗️</div>
+                <div style="font-size: 1.1em; margin-bottom: 5px;">Technical Design</div>
+                <div style="font-size: 0.9em; color: #7f8c8d;">System architecture and stack</div>
+            </a>
+            <a href="#schema" style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; text-decoration: none; color: #2c3e50; display: block;">
+                <div style="font-size: 1.5em; margin-bottom: 8px;">🗄️</div>
+                <div style="font-size: 1.1em; margin-bottom: 5px;">Database Schema</div>
+                <div style="font-size: 0.9em; color: #7f8c8d;">ER diagrams and data models</div>
+            </a>
+            <a href="#features" style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; text-decoration: none; color: #2c3e50; display: block;">
+                <div style="font-size: 1.5em; margin-bottom: 8px;">⚡</div>
+                <div style="font-size: 1.1em; margin-bottom: 5px;">Key Features</div>
+                <div style="font-size: 0.9em; color: #7f8c8d;">Core functionality</div>
+            </a>
+            <a href="#userguide" style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; text-decoration: none; color: #2c3e50; display: block;">
+                <div style="font-size: 1.5em; margin-bottom: 8px;">📖</div>
+                <div style="font-size: 1.1em; margin-bottom: 5px;">User Guide</div>
+                <div style="font-size: 0.9em; color: #7f8c8d;">Installation and usage</div>
+            </a>
+            <a href="#documentation" style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #667eea; text-decoration: none; color: #2c3e50; display: block;">
+                <div style="font-size: 1.5em; margin-bottom: 8px;">📚</div>
+                <div style="font-size: 1.1em; margin-bottom: 5px;">Documentation</div>
+                <div style="font-size: 0.9em; color: #7f8c8d;">Codebase structure</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Product Overview -->
+    <div id="overview" style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">📋 Product Overview</h2>
+        
+        <p style="font-size: 1.2em; margin-bottom: 30px; line-height: 1.8;">
+            <strong>Atlas</strong> is an enterprise-grade Retrieval-Augmented Generation (RAG) system designed to solve the fundamental challenge of making sense of massive research document collections. Unlike traditional search engines that simply match keywords, Atlas understands meaning, extracts knowledge, and visualizes relationships across 10,000+ research papers spanning AI/ML, Finance, Blockchain, Transportation, Healthcare, and Sports.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin: 30px 0;">
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; border-left: 4px solid #667eea;">
+                <div style="font-size: 2.5em; margin-bottom: 15px;">🧠</div>
+                <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 1.3em;">Dual-Intelligence Architecture</h3>
+                <p style="margin: 0;">Combines vector embeddings (PostgreSQL + pgvector) with graph reasoning (Neo4j) for both <em>semantic precision</em> and <em>relational understanding</em>.</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; border-left: 4px solid #667eea;">
+                <div style="font-size: 2.5em; margin-bottom: 15px;">📊</div>
+                <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 1.3em;">Explainable Connections</h3>
+                <p style="margin: 0;">Unlike black-box search engines, Atlas visualizes <em>how</em> entities relate across documents, making research insights transparent and verifiable.</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; border-left: 4px solid #667eea;">
+                <div style="font-size: 2.5em; margin-bottom: 15px;">🔗</div>
+                <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 1.3em;">Cross-Domain Knowledge</h3>
+                <p style="margin: 0;">Spans AI/ML, Finance, Blockchain, Transportation, Healthcare, and Sports—identifying unexpected connections across research domains.</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; border-left: 4px solid #667eea;">
+                <div style="font-size: 2.5em; margin-bottom: 15px;">⚡</div>
+                <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 1.3em;">Production-Ready Pipeline</h3>
+                <p style="margin: 0;">End-to-end automated ingestion from PDF to knowledge graph, with robust NER, deduplication, and indexing for scalability.</p>
+            </div>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 40px 0 20px 0;">Target Users</h3>
+        <ul style="margin: 20px 0 20px 30px; line-height: 1.8;">
+            <li style="margin: 12px 0;"><strong>Academic Researchers</strong>: Quickly explore literature connections across thousands of papers in biomedical, AI, physics, or other domains</li>
+            <li style="margin: 12px 0;"><strong>Policy Analysts</strong>: Cross-reference policy frameworks, regulations, and entity relationships across complex documents</li>
+            <li style="margin: 12px 0;"><strong>Research Teams</strong>: Build shared knowledge bases with visual entity networks showing topical clustering and research trends</li>
+            <li style="margin: 12px 0;"><strong>Industry Professionals</strong>: Stay current on developments across multiple domains with intelligent document understanding</li>
+        </ul>
+    </div>
+
+    <!-- Value Proposition -->
+    <div id="value" style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">💡 Value Proposition</h2>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">The Problem</h3>
+        <div style="background: #fff5f5; border-left: 4px solid #e74c3c; padding: 25px; margin: 20px 0; border-radius: 4px;">
+            <h4 style="color: #e74c3c; margin: 0 0 15px 0;">Research teams and analysts face critical information management challenges:</h4>
+            <ol style="margin: 15px 0 15px 30px; line-height: 1.8;">
+                <li style="margin: 12px 0;"><strong>Information Overload</strong>: Thousands of PDFs scattered across file systems with no unified, intelligent search capability</li>
+                <li style="margin: 12px 0;"><strong>Lost Connections</strong>: Related concepts, similar methodologies, and cross-domain insights remain undiscovered because they're buried in different documents</li>
+                <li style="margin: 12px 0;"><strong>Citation Burden</strong>: Manually tracking sources, verifying claims, and maintaining reference accuracy is extremely time-intensive</li>
+                <li style="margin: 12px 0;"><strong>Knowledge Silos</strong>: Research exists in isolated documents rather than as an interconnected knowledge network</li>
+            </ol>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">The Atlas Solution</h3>
+        <div style="background: #f0fff4; border-left: 4px solid #27ae60; padding: 25px; margin: 20px 0; border-radius: 4px;">
+            <h4 style="color: #27ae60; margin: 0 0 15px 0;">Atlas transforms document chaos into structured, queryable knowledge:</h4>
+            <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
+                <li style="margin: 12px 0;"><strong>Semantic Search</strong>: Natural language queries return contextually relevant passages, understanding meaning beyond keywords</li>
+                <li style="margin: 12px 0;"><strong>Entity Extraction & Linking</strong>: Automatically identifies people, organizations, technologies, locations, and concepts using spaCy's <code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px;">en_core_web_lg</code> model</li>
+                <li style="margin: 12px 0;"><strong>Knowledge Graph Visualization</strong>: Interactive Cytoscape-based graphs showing entity relationships, with color-coded nodes and double-click interactions</li>
+                <li style="margin: 12px 0;"><strong>Automatic Citation</strong>: Every response includes precise [DOC_ID:CHUNK_ID] references for instant verification</li>
+                <li style="margin: 12px 0;"><strong>Multi-Hop Reasoning</strong>: Answer complex questions requiring synthesis from multiple papers across different domains using graph traversal</li>
+            </ul>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">Measurable Impact</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin: 30px 0;">
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; border-top: 4px solid #667eea;">
+                <h4 style="color: #667eea; margin: 0 0 15px 0;">Research Efficiency</h4>
+                <ul style="margin: 15px 0 0 20px;">
+                    <li style="margin: 10px 0;"><strong>10x faster</strong> literature exploration vs. manual reading</li>
+                    <li style="margin: 10px 0;"><strong>&lt;150ms</strong> query response times on 200K chunks</li>
+                    <li style="margin: 10px 0;"><strong>Automatic</strong> source tracking eliminates citation errors</li>
+                </ul>
+            </div>
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; border-top: 4px solid #667eea;">
+                <h4 style="color: #667eea; margin: 0 0 15px 0;">Knowledge Discovery</h4>
+                <ul style="margin: 15px 0 0 20px;">
+                    <li style="margin: 10px 0;"><strong>50K+ entities</strong> extracted and linked automatically</li>
+                    <li style="margin: 10px 0;"><strong>Cross-domain</strong> connections surface novel insights</li>
+                    <li style="margin: 10px 0;"><strong>Visual graphs</strong> with legend accelerate understanding</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Differentiation -->
+    <div id="differentiation" style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">🎯 Key Differentiators</h2>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">What Sets Atlas Apart</h3>
+
+        <div style="background: #f0f7ff; border-left: 4px solid #667eea; padding: 25px; margin: 20px 0; border-radius: 4px;">
+            <h4 style="color: #667eea; margin: 0 0 15px 0;">1. Hybrid Architecture: The Best of Both Worlds</h4>
+            <p>Most RAG systems use either vector search OR knowledge graphs. Atlas uses BOTH simultaneously:</p>
+            <ul style="margin: 15px 0 0 20px; line-height: 1.8;">
+                <li style="margin: 10px 0;"><strong>PostgreSQL + pgvector</strong>: Handles semantic similarity with IVFFlat indexing for sub-150ms queries on 200K chunks</li>
+                <li style="margin: 10px 0;"><strong>Neo4j</strong>: Manages entity relationships and graph traversal for explainable connections with 50K+ unique entities</li>
+                <li style="margin: 10px 0;"><strong>Integrated Reasoning</strong>: The <code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px;">search_rag_plus_graph</code> endpoint combines both systems seamlessly</li>
+            </ul>
+        </div>
+
+        <div style="background: #f0f7ff; border-left: 4px solid #667eea; padding: 25px; margin: 20px 0; border-radius: 4px;">
+            <h4 style="color: #667eea; margin: 0 0 15px 0;">2. Optimized Data Pipeline</h4>
+            <p>Built for scale using Google Colab GPU acceleration:</p>
+            <ul style="margin: 15px 0 0 20px; line-height: 1.8;">
+                <li style="margin: 10px 0;"><strong>Cloud-based embedding generation</strong>: Free GPU on Colab for batch processing (64 embeddings at a time)</li>
+                <li style="margin: 10px 0;"><strong>Fast local storage</strong>: Samsung T7 external SSD for high-throughput PDF access</li>
+                <li style="margin: 10px 0;"><strong>Parquet format</strong>: Efficient columnar storage for embeddings with bulk ingestion scripts</li>
+                <li style="margin: 10px 0;"><strong>Smart chunking</strong>: 300-token chunks with 50-token overlap preserve context</li>
+            </ul>
+        </div>
+
+        <div style="background: #f0f7ff; border-left: 4px solid #667eea; padding: 25px; margin: 20px 0; border-radius: 4px;">
+            <h4 style="color: #667eea; margin: 0 0 15px 0;">3. Production-Scale Engineering</h4>
+            <p>Built for real-world deployment, not just demos:</p>
+            <ul style="margin: 15px 0 0 20px; line-height: 1.8;">
+                <li style="margin: 10px 0;">Handles 10,000+ documents with sub-150ms latency</li>
+                <li style="margin: 10px 0;">Robust duplicate detection via SHA-256 hashing</li>
+                <li style="margin: 10px 0;">Vector indexing (IVFFlat with 100 lists) for scalable similarity search</li>
+                <li style="margin: 10px 0;">Docker Compose for one-command deployment</li>
+                <li style="margin: 10px 0;">ColBERT + BM25 hybrid search options for flexibility</li>
+            </ul>
+        </div>
+
+        <div style="background: #f0f7ff; border-left: 4px solid #667eea; padding: 25px; margin: 20px 0; border-radius: 4px;">
+            <h4 style="color: #667eea; margin: 0 0 15px 0;">4. Rich Interactive Visualization</h4>
+            <p>Graph exploration with professional UI/UX:</p>
+            <ul style="margin: 15px 0 0 20px; line-height: 1.8;">
+                <li style="margin: 10px 0;"><strong>Color-coded entities</strong>: Documents (blue), Chunks (gray), Persons (green), Organizations (orange), Technologies (purple), Locations (red), Concepts (yellow)</li>
+                <li style="margin: 10px 0;"><strong>Interactive legend</strong>: Real-time visual guide to node types</li>
+                <li style="margin: 10px 0;"><strong>Double-click actions</strong>: Documents open PDFs, chunks show previews</li>
+                <li style="margin: 10px 0;"><strong>Chat history sidebar</strong>: Track past queries and results</li>
+            </ul>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 40px 0 20px 0;">Competitive Comparison</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 30px 0; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <thead>
+                <tr>
+                    <th style="background: #667eea; color: white; padding: 16px; text-align: left; font-weight: 600; border: 1px solid #ddd;">Capability</th>
+                    <th style="background: #667eea; color: white; padding: 16px; text-align: left; font-weight: 600; border: 1px solid #ddd;">Traditional Search</th>
+                    <th style="background: #667eea; color: white; padding: 16px; text-align: left; font-weight: 600; border: 1px solid #ddd;">Basic RAG</th>
+                    <th style="background: #667eea; color: white; padding: 16px; text-align: left; font-weight: 600; border: 1px solid #ddd;"><strong>Atlas</strong></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background: #f8f9fa;">
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;"><strong>Semantic Understanding</strong></td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">❌ Keyword-only</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ Vector embeddings</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ all-MiniLM-L6-v2 (384-dim)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;"><strong>Entity Extraction</strong></td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">❌ None</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">❌ Not standard</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ spaCy en_core_web_lg (7+ types)</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;"><strong>Relationship Mapping</strong></td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">❌ None</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">❌ None</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ Full knowledge graph (Neo4j)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;"><strong>Visual Exploration</strong></td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">❌ Text results only</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">❌ Text results only</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ Cytoscape interactive graphs</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;"><strong>Multi-Hop Queries</strong></td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">❌ Single document</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">⚠️ Limited</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ Graph traversal + synthesis</td>
+                </tr>
+                <tr>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;"><strong>Explainability</strong></td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">⚠️ Document name</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">⚠️ Citations only</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ Citations + visual graphs</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;"><strong>Scale</strong></td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">⚠️ Slows with size</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ Good</td>
+                    <td style="padding: 14px 16px; border: 1px solid #ddd;">✅ Optimized for 200K+ chunks</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Technical Architecture -->
+    <div id="architecture" style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">🏗️ Technical Design & Architecture</h2>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">System Architecture</h3>
+        <p>Atlas employs a <strong>hybrid database architecture</strong> with optimized data pipeline using cloud-based embedding generation and local high-speed storage:</p>
+
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin: 30px 0; border: 2px solid #ecf0f1;">
+            <pre style="background: white; color: #2c3e50; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 0; border: 1px solid #e0e0e0; font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.5;">
+┌────────────────────────────────────────────────────────────┐
+│                  ATLAS SYSTEM ARCHITECTURE                  │
+└────────────────────────────────────────────────────────────┘
+                             │
+              ┌──────────────┴──────────────┐
+              ▼                             ▼
+   [Google Colab - GPU]          [Local Storage - Samsung T7 SSD]
+   • Embedding generation         • 10,000+ PDFs
+   • Batch size: 64              • Fast I/O (~1000 MB/s)
+   • all-MiniLM-L6-v2            • Parquet files
+   • Outputs: .parquet           
+              │                             │
+              └──────────────┬──────────────┘
+                             ▼
+                   ┌──────────────────┐
+                   │   FastAPI Core   │
+                   │  (REST Endpoints)│
+                   │  • /ingest       │
+                   │  • /search_rag_  │
+                   │    plus_graph    │
+                   └──────────────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         ▼                   ▼                   ▼
+ ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+ │  PostgreSQL  │    │    Neo4j     │    │ React+Vite   │
+ │  + pgvector  │    │   Graph DB   │    │   Frontend   │
+ └──────────────┘    └──────────────┘    └──────────────┘
+ │• 200K chunks │    │• 50K entities│    │• ChatWindow  │
+ │• Embeddings  │    │• Relations   │    │• GraphView   │
+ │• IVFFlat idx │    │• Subgraphs   │    │• SideBar     │
+ └──────────────┘    └──────────────┘    └──────────────┘
+            </pre>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">Technology Stack</h3>
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin: 30px 0;">
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">Python 3.11</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">FastAPI</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">PostgreSQL 16</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">pgvector</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">Neo4j 5.x</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">SentenceTransformers</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">spaCy NER</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">ColBERT</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">React 18</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">Vite</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">Yarn</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">Cytoscape.js</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">Docker Compose</div>
+            <div style="background: #667eea; color: white; padding: 15px; text-align: center; border-radius: 6px; font-weight: 600; font-size: 0.95em;">PyMuPDF (fitz)</div>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">Data Processing Pipeline</h3>
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin: 30px 0; border: 2px solid #ecf0f1;">
+            <pre style="background: white; color: #2c3e50; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 0; border: 1px solid #e0e0e0; font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.5;">
+   📄 PDF Collection (Samsung T7 SSD)
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ [1] Text Extraction (Google Colab)     │
+│     • PyMuPDF (fitz) library           │
+│     • Handle multi-column layouts      │
+└─────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ [2] Intelligent Chunking               │
+│     • 300 tokens per chunk             │
+│     • 50 token overlap                 │
+│     • Preserve semantic boundaries     │
+└─────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ [3] Embedding Generation (GPU)         │
+│     • all-MiniLM-L6-v2 model           │
+│     • 384-dimensional vectors          │
+│     • Batch size: 64 for efficiency    │
+│     • Save to embeddings.parquet       │
+└─────────────────────────────────────────┘
+       │
+       ▼ Download parquet
+┌─────────────────────────────────────────┐
+│ [4] Bulk Ingestion (Local)             │
+│     • Load parquet file                │
+│     • Insert into PostgreSQL           │
+│     • ~200K chunks processed           │
+└─────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ [5] Named Entity Recognition           │
+│     • spaCy en_core_web_lg             │
+│     • Extract 7+ entity types          │
+│     • ~50K unique entities             │
+└─────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ [6] Graph Construction (Neo4j)         │
+│     • Create entity nodes              │
+│     • Link chunks to entities          │
+│     • Build relationship network       │
+└─────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────┐
+│ [7] Vector Indexing                    │
+│     • IVFFlat with 100 lists           │
+│     • L2 distance metric               │
+│     • Enable fast similarity search    │
+└─────────────────────────────────────────┘
+       │
+       ▼
+   ✅ Ready for Query (<150ms latency)
+            </pre>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">Design Rationale</h3>
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 20px 0 15px 0;">Why Hybrid PostgreSQL + Neo4j?</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin: 20px 0;">
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; border-top: 4px solid #667eea;">
+                <h4 style="color: #667eea; margin: 0 0 10px 0;">PostgreSQL + pgvector</h4>
+                <p style="margin: 0 0 10px 0;"><strong>Use Case:</strong> Semantic similarity search</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li style="margin: 8px 0;">Optimized ANN retrieval (&lt;150ms)</li>
+                    <li style="margin: 8px 0;">ACID guarantees for data integrity</li>
+                    <li style="margin: 8px 0;">Excellent Python integration</li>
+                    <li style="margin: 8px 0;">Hybrid queries (vector + structured)</li>
+                </ul>
+            </div>
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; border-top: 4px solid #667eea;">
+                <h4 style="color: #667eea; margin: 0 0 10px 0;">Neo4j</h4>
+                <p style="margin: 0 0 10px 0;"><strong>Use Case:</strong> Relationship reasoning</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li style="margin: 8px 0;">Native graph traversal (Cypher)</li>
+                    <li style="margin: 8px 0;">Visualize entity networks</li>
+                    <li style="margin: 8px 0;">Multi-hop queries</li>
+                    <li style="margin: 8px 0;">Explain connections</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Why Google Colab for Embeddings?</h4>
+        <div style="background: #f0fff4; border-left: 4px solid #27ae60; padding: 25px; margin: 20px 0; border-radius: 4px;">
+            <ul style="margin: 0 0 0 20px; line-height: 1.8;">
+                <li style="margin: 10px 0;"><strong>Free GPU access</strong>: Generate 200K+ embeddings without hardware investment</li>
+                <li style="margin: 10px 0;"><strong>Batch processing</strong>: Process 64 chunks at once for efficiency</li>
+                <li style="margin: 10px 0;"><strong>Parquet export</strong>: Efficient columnar format for bulk local ingestion</li>
+                <li style="margin: 10px 0;"><strong>Separation of concerns</strong>: Generate embeddings once, reuse locally</li>
+            </ul>
+        </div>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Why Local SSD Storage?</h4>
+        <div style="background: #f0f7ff; border-left: 4px solid #667eea; padding: 25px; margin: 20px 0; border-radius: 4px;">
+            <ul style="margin: 0 0 0 20px; line-height: 1.8;">
+                <li style="margin: 10px 0;"><strong>High throughput</strong>: Samsung T7 delivers ~1000 MB/s read speeds</li>
+                <li style="margin: 10px 0;"><strong>Cost-effective</strong>: No cloud storage fees for 10,000+ PDFs</li>
+                <li style="margin: 10px 0;"><strong>Privacy</strong>: All data remains on-premises</li>
+                <li style="margin: 10px 0;"><strong>Reliability</strong>: Direct file access without network dependency</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Database Schema -->
+    <div id="schema" style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">🗄️ Database Schema</h2>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">Entity-Relationship Diagram</h3>
+
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 8px; margin: 30px 0; border: 2px solid #ecf0f1;">
+            <h4 style="color: #667eea; margin: 0 0 20px 0;">PostgreSQL Schema</h4>
+            <pre style="background: white; color: #2c3e50; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 0; border: 1px solid #e0e0e0; font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.5;">
+┌─────────────────────────┐
+│       document          │
+├─────────────────────────┤
+│ id           UUID (PK)  │───┐
+│ title        TEXT       │   │
+│ mime_type    TEXT       │   │ 1:N (10,000+ documents)
+│ sha256       TEXT       │   │
+│ source_url   TEXT       │   │
+│ created_at   TIMESTAMP  │   │
+└─────────────────────────┘   │
+                              │
+                              ▼
+                    ┌─────────────────────────┐
+                    │        chunk            │
+                    ├─────────────────────────┤
+                    │ id           UUID (PK)  │───┐
+                    │ document_id  UUID (FK)  │   │
+                    │ ord          INT        │   │ M:N (~200K chunks)
+                    │ text         TEXT       │   │
+                    │ token_count  INT        │   │
+                    │ embedding    VECTOR(384)│   │
+                    └─────────────────────────┘   │
+                              │                   │
+                              │                   ▼
+                              │          ┌────────────────────┐
+                              │          │   chunk_entity     │
+                              │          ├────────────────────┤
+                              │          │ id         UUID(PK)│
+                              └─────────▶│ chunk_id   UUID(FK)│
+                                         │ entity_id  UUID(FK)│
+                                         └────────────────────┘
+                                                  │
+                                                  ▼
+                                         ┌─────────────────────────┐
+                                         │        entity           │
+                                         ├─────────────────────────┤
+                                         │ id         UUID (PK)    │
+                                         │ name       TEXT (UNIQUE)│
+                                         │ type       TEXT         │
+                                         │ created_at TIMESTAMP    │
+                                         └─────────────────────────┘
+                                         (~50K unique entities)
+            </pre>
+
+            <h4 style="color: #667eea; margin: 30px 0 20px 0;">Neo4j Graph Schema</h4>
+            <pre style="background: white; color: #2c3e50; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 0; border: 1px solid #e0e0e0; font-family: 'Courier New', monospace; font-size: 0.9em; line-height: 1.5;">
+Node Labels:
+  • (:Document)  - Document metadata + title
+  • (:Chunk)     - Chunk id, text, ord
+  • (:Entity)    - Entity name, type (7+ types)
+
+Relationships:
+  • (Document)-[:CONTAINS]->(Chunk)
+  • (Chunk)-[:MENTIONS]->(Entity)
+  • (Entity)-[:RELATED_TO]->(Entity)
+  • (Entity)-[:CO_OCCURS_IN]->(Chunk)
+
+Visualization Colors (Frontend):
+  • Document:      Blue (#3B82F6)
+  • Chunk:         Gray (#6B7280)
+  • Person:        Green (#10B981)
+  • Organization:  Orange (#F59E0B)
+  • Technology:    Purple (#8B5CF6)
+  • Location:      Red (#EF4444)
+  • Concept:       Yellow (#EAB308)
+            </pre>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 40px 0 20px 0;">Key Schema Features</h3>
+        
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 20px 0 15px 0;">Critical Indexes for Performance</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.9em;">-- Vector similarity search (<150ms on 200K chunks)
+CREATE INDEX idx_chunk_embedding 
+ON chunk USING ivfflat (embedding vector_l2_ops) 
+WITH (lists = 100);
+
+-- Prevent duplicate chunks within documents
+CREATE UNIQUE INDEX unique_chunk_per_doc 
+ON chunk (document_id, ord);
+
+-- Fast document lookups
+CREATE INDEX idx_chunk_document_id 
+ON chunk (document_id);
+
+-- Entity deduplication (50K unique entities)
+CREATE UNIQUE INDEX unique_entity_name 
+ON entity (name);
+
+-- Efficient chunk-entity joins
+CREATE INDEX idx_chunk_entity_chunk_id 
+ON chunk_entity (chunk_id);
+
+CREATE INDEX idx_chunk_entity_entity_id 
+ON chunk_entity (entity_id);</pre>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Entity Types Extracted (spaCy en_core_web_lg)</h4>
+        <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
+            <li style="margin: 10px 0;"><code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px; color: #e74c3c; font-family: 'Courier New', monospace;">PERSON</code>: Researchers, authors, historical figures</li>
+            <li style="margin: 10px 0;"><code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px; color: #e74c3c; font-family: 'Courier New', monospace;">ORG</code>: Companies, institutions, research labs</li>
+            <li style="margin: 10px 0;"><code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px; color: #e74c3c; font-family: 'Courier New', monospace;">GPE</code>: Countries, cities, geopolitical entities</li>
+            <li style="margin: 10px 0;"><code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px; color: #e74c3c; font-family: 'Courier New', monospace;">TECH</code>: Technologies, algorithms, frameworks</li>
+            <li style="margin: 10px 0;"><code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px; color: #e74c3c; font-family: 'Courier New', monospace;">PRODUCT</code>: Software, tools, platforms</li>
+            <li style="margin: 10px 0;"><code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px; color: #e74c3c; font-family: 'Courier New', monospace;">DATE</code>: Temporal references</li>
+            <li style="margin: 10px 0;"><code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px; color: #e74c3c; font-family: 'Courier New', monospace;">MONEY</code>: Financial figures, funding amounts</li>
+        </ul>
+    </div>
+
+    <!-- Key Features -->
+    <div id="features" style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">⚡ Key Features & Functionality</h2>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin: 30px 0;">
+            <div style="background: white; border: 1px solid #e0e0e0; padding: 30px; border-radius: 8px;">
+                <div style="font-size: 2.5em; margin-bottom: 15px;">🔍</div>
+                <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 1.3em;">1. RAG + Graph Search</h3>
+                <p style="margin: 0 0 15px 0;">The <code style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px;">search_rag_plus_graph</code> endpoint combines semantic search with knowledge graph visualization in a single query.</p>
+                <pre style="background: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #667eea; padding: 15px; overflow-x: auto; border-radius: 5px; margin: 0; font-family: 'Courier New', monospace; font-size: 0.85em;">POST /search_rag_plus_graph
+{
+  "q": "transformer attention",
+  "top_k": 5,
+  "with_graph": true
+}
+
+Returns: hits + graph nodes/edges</pre>
+            </div>
+
+            <div style="background: white; border: 1px solid #e0e0e0; padding: 30px; border-radius: 8px;">
+                <div style="font-size: 2.5em; margin-bottom: 15px;">🕸️</div>
+                <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 1.3em;">2. Interactive Graphs</h3>
+                <p style="margin: 0 0 10px 0;">Cytoscape.js-powered visualizations with:</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li style="margin: 5px 0;">Color-coded entity types with legend</li>
+                    <li style="margin: 5px 0;">Double-click to open PDFs/previews</li>
+                    <li style="margin: 5px 0;">Real-time graph updates</li>
+                    <li style="margin: 5px 0;">Up to 17+ nodes per query</li>
+                </ul>
+            </div>
+
+            <div style="background: white; border: 1px solid #e0e0e0; padding: 30px; border-radius: 8px;">
+                <div style="font-size: 2.5em; margin-bottom: 15px;">💬</div>
+                <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 1.3em;">3. Chat Interface</h3>
+                <p style="margin: 0 0 10px 0;">Professional chat UI with:</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li style="margin: 5px 0;">Chat history sidebar</li>
+                    <li style="margin: 5px 0;">Message bubbles with citations</li>
+                    <li style="margin: 5px 0;">Streaming responses (if enabled)</li>
+                    <li style="margin: 5px 0;">Integrated graph viewer</li>
+                </ul>
+            </div>
+
+            <div style="background: white; border: 1px solid #e0e0e0; padding: 30px; border-radius: 8px;">
+                <div style="font-size: 2.5em; margin-bottom: 15px;">⚙️</div>
+                <h3 style="color: #667eea; margin: 0 0 15px 0; font-size: 1.3em;">4. Hybrid Retrieval</h3>
+                <p style="margin: 0 0 10px 0;">Multiple search strategies:</p>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li style="margin: 5px 0;"><strong>Semantic</strong>: Vector (all-MiniLM-L6-v2)</li>
+                    <li style="margin: 5px 0;"><strong>Lexical</strong>: BM25 keyword matching</li>
+                    <li style="margin: 5px 0;"><strong>ColBERT</strong>: Late interaction retrieval</li>
+                    <li style="margin: 5px 0;"><strong>Graph</strong>: Neo4j traversal</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Guide -->
+    <div id="userguide" style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">📖 User Guide</h2>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">Installation & Setup</h3>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.9em;"># Clone repository
+git clone https://github.com/RRB230899/atlas-ai-kg.git
+cd atlas-ai-kg
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+python -m spacy download en_core_web_lg
+
+# Initialize database
+python init_db.py
+
+# Start databases (PostgreSQL + Neo4j)
+# See SETUP.md for database installation
+
+# Start FastAPI server
+uvicorn backend.fastapi.main:app --reload --port 8000</pre>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 40px 0 20px 0;">API Endpoints</h3>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 20px 0 15px 0;">Single File Ingestion</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.9em;">POST /ingest
+Content-Type: multipart/form-data
+
+# Upload single PDF
+curl -X POST "http://localhost:8000/ingest" \
+  -F "file=@research_paper.pdf"
+
+# Response:
+{
+  "status": "success",
+  "document_id": "abc-123-uuid",
+  "filename": "research_paper.pdf"
+}</pre>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">RAG + Graph Search (Primary Endpoint)</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.9em;">POST /search_rag_plus_graph
+Content-Type: application/json
+
+{
+  "q": "machine learning optimization",
+  "top_k": 5,
+  "use_colbert": false,
+  "with_graph": true
+}
+
+# Response includes:
+# - hits: Ranked search results with chunks
+# - graph: {nodes[], edges[]} for visualization</pre>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Basic Semantic Search</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.9em;">GET /search?q=neural+networks&k=10
+
+# Returns top-k chunks with similarity scores</pre>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Search with Entities</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.9em;">GET /search_with_entities?q=blockchain&k=5
+
+# Returns chunks + linked entities from Neo4j</pre>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 40px 0 20px 0;">Frontend Interface</h3>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.9em;">cd frontend
+
+# Install dependencies
+yarn install
+
+# Start development server (Vite)
+yarn dev
+
+# Access at http://localhost:5173</pre>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Frontend Features</h4>
+        <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
+            <li style="margin: 10px 0;"><strong>ChatWindow</strong>: Main chat interface for queries</li>
+            <li style="margin: 10px 0;"><strong>GraphView</strong>: Cytoscape.js visualization with interactive legend</li>
+            <li style="margin: 10px 0;"><strong>MessageBubble</strong>: Displays search results with citations</li>
+            <li style="margin: 10px 0;"><strong>SideBar</strong>: Chat history with past queries</li>
+        </ul>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 40px 0 20px 0;">Docker Deployment</h3>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.9em;"># Start all services (PostgreSQL, Neo4j, Backend, Frontend)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Access services:
+# - PostgreSQL: localhost:5432
+# - Neo4j Browser: http://localhost:7474
+# - Backend API: http://localhost:8000
+# - Frontend: http://localhost:5173</pre>
+    </div>
+
+    <!-- Documentation -->
+    <div id="documentation" style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">📚 Code Documentation & Structure</h2>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 30px 0 20px 0;">Project Structure</h3>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.85em;">atlas-ai-kg/
+├── backend/
+│   ├── fastapi/
+│   │   ├── main.py              # FastAPI app + endpoints
+│   │   └── utils.py             # DB connection, utils
+│   ├── ingestion/
+│   │   ├── colab_bulk_ingestion.py       # Colab embedding script
+│   │   ├── bulk_insert_parquet.py        # Postgres bulk insert
+│   │   ├── ingest_parquet_with_graph.py  # Neo4j bulk insert
+│   │   ├── ingest_with_graph.py          # Single file (+ graph)
+│   │   └── ingest.py                     # Single file (basic)
+│   ├── search/
+│   │   ├── colbert_search.py             # ColBERT retrieval
+│   │   ├── bm25_search.py                # Lexical search
+│   │   └── colbert_indexing.py           # Build ColBERT index
+│   └── indexes/
+│       ├── plan.json                     # ColBERT metadata
+│       └── [colbert index files]
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ChatWindow.jsx            # Main chat UI
+│   │   │   ├── GraphView.jsx             # Cytoscape graph
+│   │   │   ├── MessageBubble.jsx         # Result display
+│   │   │   └── SideBar.jsx               # Chat history
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json                      # Yarn dependencies
+│   └── vite.config.js                    # Vite configuration
+├── init_db.py                   # Database initialization
+├── requirements.txt             # Python dependencies
+├── docker-compose.yml           # Docker orchestration
+├── SETUP.md                     # Detailed setup guide
+├── CONTRIBUTING.md              # Contribution guidelines
+└── README.md</pre>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 40px 0 20px 0;">Key Implementation Details</h3>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Chunking Strategy (300 tokens, 50 overlap)</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.85em;">def chunk_text(text: str, chunk_size=300, overlap=50):
+    """
+    Splits text into overlapping chunks to preserve 
+    context at boundaries.
+    
+    Args:
+        text: Input text to chunk
+        chunk_size: 300 tokens per chunk
+        overlap: 50 overlapping tokens
+    
+    Returns:
+        List of text chunks
+    """
+    tokenizer = AutoTokenizer.from_pretrained(
+        "sentence-transformers/all-MiniLM-L6-v2"
+    )
+    tokens = tokenizer.encode(text)
+    
+    chunks = []
+    for i in range(0, len(tokens), chunk_size - overlap):
+        chunk = tokenizer.decode(
+            tokens[i:i + chunk_size]
+        )
+        chunks.append(chunk)
+    
+    return chunks</pre>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Embedding Generation (Batch 64)</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.85em;">from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer(
+    "sentence-transformers/all-MiniLM-L6-v2"
+)
+
+# Batch processing for efficiency (64 at once)
+BATCH_SIZE = 64
+embeddings = []
+
+for i in range(0, len(chunks), BATCH_SIZE):
+    batch = chunks[i:i + BATCH_SIZE]
+    batch_embeddings = model.encode(batch)
+    embeddings.extend(batch_embeddings)
+
+# embeddings shape: (N, 384)</pre>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Vector Search with pgvector</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.85em;">async def semantic_search(query: str, k: int = 10):
+    """Perform semantic similarity search"""
+    # Generate query embedding
+    query_embedding = model.encode(query).tolist()
+    
+    # Vector similarity search with L2 distance
+    results = await db.execute(
+        """
+        SELECT c.id, c.text,
+               c.embedding <-> %s::vector AS distance
+        FROM chunk c
+        ORDER BY c.embedding <-> %s::vector
+        LIMIT %s
+        """,
+        (query_embedding, query_embedding, k)
+    )
+    
+    return results  # <150ms on 200K chunks</pre>
+
+        <h4 style="color: #667eea; font-size: 1.2em; margin: 30px 0 15px 0;">Entity Extraction with spaCy</h4>
+        <pre style="background: #2c3e50; color: #ecf0f1; padding: 25px; border-radius: 6px; overflow-x: auto; margin: 20px 0; border-left: 4px solid #667eea; font-family: 'Courier New', monospace; font-size: 0.85em;">import spacy
+
+# Load large English model
+nlp = spacy.load("en_core_web_lg")
+
+def extract_entities(text: str):
+    """Extract named entities using spaCy"""
+    doc = nlp(text)
+    
+    entities = []
+    for ent in doc.ents:
+        entities.append({
+            "name": ent.text,
+            "type": ent.label_,  # PERSON, ORG, GPE, etc.
+            "start": ent.start_char,
+            "end": ent.end_char
+        })
+    
+    return entities  # ~50K unique across corpus</pre>
+    </div>
+
+    <!-- Deliverables -->
+    <div style="padding: 60px 50px; border-bottom: 1px solid #ecf0f1;">
+        <h2 style="color: #667eea; font-size: 2.2em; margin: 0 0 30px 0; padding-bottom: 15px; border-bottom: 3px solid #667eea; font-weight: 600;">📦 Project Deliverables</h2>
+
+        <div style="background: #fff9e6; border-left: 4px solid #f39c12; padding: 20px 25px; margin: 25px 0; border-radius: 4px;">
+            <strong style="color: #e67e22; display: block; margin-bottom: 10px; font-size: 1.1em;">Complete Package</strong>
+            All materials required for evaluation, deployment, and extension of the Atlas system.
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 30px 0;">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ Production-ready codebase with clean architecture</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ Docker Compose for one-command deployment</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ Comprehensive API documentation (Swagger)</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ SETUP.md with detailed instructions</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ 10,000+ processed documents across 6 domains</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ Sample queries and expected outputs</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ Database schema with init_db.py script</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ CONTRIBUTING.md for extending the system</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ Frontend with interactive graph visualization</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 6px; border-left: 4px solid #27ae60;">✓ Colab notebook for embedding generation</div>
+        </div>
+
+        <h3 style="color: #34495e; font-size: 1.6em; margin: 40px 0 20px 0;">Additional Resources</h3>
+        <ul style="margin: 20px 0 20px 30px; line-height: 1.8;">
+            <li style="margin: 12px 0;"><a href="http://localhost:8000/docs" target="_blank" style="color: #667eea; text-decoration: none; border-bottom: 1px solid #667eea;">API Documentation (Swagger UI)</a> - Interactive API explorer(Works only after running your backend using uvicorn)</li>
+            <li style="margin: 12px 0;"><a href="https://github.com/RRB230899/atlas-ai-kg/blob/main/SETUP.md" target="_blank" style="color: #667eea; text-decoration: none; border-bottom: 1px solid #667eea;">Deployment Guide</a> - Production setup instructions</li>
+            <li style="margin: 12px 0;"><a href="https://github.com/RRB230899/atlas-ai-kg/blob/main/docker-compose.yml" target="_blank" style="color: #667eea; text-decoration: none; border-bottom: 1px solid #667eea;">Docker Compose Configuration</a> - Container orchestration</li>
+        </ul>
+    </div>
+
+    <!-- Footer -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 50px; text-align: center;">
+        <h2 style="color: white; font-size: 2em; margin: 0 0 20px 0;">Ready to Transform Your Research Workflow?</h2>
+        <p style="font-size: 1.2em; margin: 20px 0;">
+            Atlas makes knowledge discovery fast, explainable, and comprehensive across 10,000+ research papers.
+        </p>
+        <a href="https://github.com/RRB230899/atlas-ai-kg" target="_blank" style="display: inline-block; background: white; color: #667eea; padding: 16px 40px; text-decoration: none; border-radius: 30px; font-weight: 600; margin-top: 20px; font-size: 1.1em;">
+            🚀 Explore Atlas on GitHub
+        </a>
+        <p style="margin-top: 40px; font-size: 0.9em; opacity: 0.9;">
+            Built with FastAPI, PostgreSQL, Neo4j, React, and Vite
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>

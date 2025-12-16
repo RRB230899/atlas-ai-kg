@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with pgvector
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: atlas-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      # Performance tuning for vector operations
+      POSTGRES_SHARED_BUFFERS: 2GB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 8GB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - atlas-network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: atlas-backend
+    environment:
+      # Database connections
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Neo4j connection (Cloud instance)
+      NEO_URI: ${NEO_URI}
+      NEO_USER: ${NEO_USER}
+      NEO_PASSWORD: ${NEO_PASSWORD}
+      
+      # Model configuration
+      EMBEDDING_MODEL: sentence-transformers/all-MiniLM-L6-v2
+      SPACY_MODEL: en_core_web_lg
+      
+      # Optional: OpenAI API
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend:ro
+      - ./init_db.py:/app/init_db.py:ro
+      - ./data:/app/data:ro  # For parquet files
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for databases...' &&
+        sleep 10 &&
+        echo 'Initializing database...' &&
+        python init_db.py &&
+        echo 'Starting FastAPI server...' &&
+        uvicorn backend.fastapi.main:app --host 0.0.0.0 --port 8000
+      "
+    restart: unless-stopped
+    networks:
+      - atlas-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: atlas-frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+    depends_on:
+      - backend
+    command: yarn dev --host 0.0.0.0
+    restart: unless-stopped
+    networks:
+      - atlas-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  atlas-network:
+    driver: bridge
+
+# Usage:
+# ------
+# 1. Create .env file with your credentials
+# 2. Add .env to .gitignore
+# 
+# Start all services:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f
+#   docker-compose logs -f backend  # Specific service
+#
+# Stop services:
+#   docker-compose down
+#
+# Stop and remove volumes (⚠️ destroys data):
+#   docker-compose down -v
+#
+# Rebuild after code changes:
+#   docker-compose up -d --build
+#
+# Access services:
+#   PostgreSQL: localhost:5432
+#   Neo4j: Your cloud instance
+#   FastAPI: http://localhost:8000
+#   FastAPI Docs: http://localhost:8000/docs
+#   Frontend: http://localhost:5173
