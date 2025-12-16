@@ -102,7 +102,7 @@ networks:
 
 # Usage:
 # ------
-# 1. Create .env file with your credentials
+# 1. Create .env file with your credentials (See .env.example)
 # 2. Add .env to .gitignore
 # 
 # Start all services:
