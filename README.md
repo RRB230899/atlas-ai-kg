@@ -10,7 +10,7 @@
 
 Built for researchers, analysts, and knowledge workers who need to make sense of massive document collections across **AI/ML, Finance, Blockchain, Transportation, Healthcare, and Sports**.
 
-🔗 **[Live Demo](#)** | 📖 **[Documentation](./docs/SETUP.md)** |
+📖 **[Documentation](./docs/SETUP.md)** |
 
 ---
 
@@ -485,18 +485,6 @@ curl "http://localhost:8000/search?q=machine+learning&k=3"
 - **[Setup Guide](./docs/SETUP.md)**: Detailed installation and configuration
 - **[API Documentation](http://localhost:8000/docs)**: Interactive Swagger UI (when running)
 - **[Docker Guide](./docs/docker-compose.yml)**: Container deployment
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
-
-**Ways to contribute:**
-- 🐛 Report bugs
-- 💡 Suggest features
-- 📖 Improve documentation
-- 🔧 Submit pull requests
 
 ---
 
