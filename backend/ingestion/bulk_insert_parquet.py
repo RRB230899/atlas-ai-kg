@@ -1,7 +1,7 @@
 import logging
 import pandas as pd
 import numpy as np
-from backend.fastapi.utils import get_conn
+from backend.db import get_conn
 from psycopg2.extras import execute_values
 
 logging.basicConfig(level=logging.INFO)

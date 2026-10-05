@@ -1,8 +1,9 @@
 import spacy
 import psycopg2
-import os
 import logging
 from psycopg2.extras import execute_values
+
+from backend.db import get_conn
 from .ingest import ingest_pdf
 
 # --- Setup logging ---
@@ -36,18 +37,12 @@ def upsert_mention(tx, chunk_id, entity_name):
     """, chunk_id=chunk_id, entity_name=entity_name)
 
 
-def ingest_pdf_with_graph(path, driver):
+def ingest_pdf_with_graph(path, driver, title=None):
     logging.info(f"Starting ingestion with graph for '{path}'")
 
     # --- Connect to Postgres ---
     try:
-        conn = psycopg2.connect(
-            dbname=os.getenv("POSTGRES_DBNAME"),
-            user=os.getenv("POSTGRES_USER"),
-            password=os.getenv("POSTGRES_PASSWORD"),
-            host="localhost",
-            port=5432
-        )
+        conn = get_conn()
         cur = conn.cursor()
         logging.info("Connected to PostgreSQL successfully.")
     except psycopg2.OperationalError as e:
@@ -56,7 +51,7 @@ def ingest_pdf_with_graph(path, driver):
 
     # --- Ingest into Postgres ---
     try:
-        document_id, chunks = ingest_pdf(path)
+        document_id, chunks = ingest_pdf(path, title=title)
         if not document_id or not chunks:
             logging.warning(f"No chunks inserted for '{path}', skipping Neo4j ingestion.")
             conn.close()

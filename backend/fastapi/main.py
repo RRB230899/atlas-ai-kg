@@ -1,14 +1,14 @@
 from fastapi import FastAPI, UploadFile, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from backend.ingestion.ingest_with_graph import ingest_pdf_with_graph
-from backend.fastapi.utils import get_conn, model, build_graph_for_chunks
+from backend.fastapi.utils import get_conn, model, build_graph_for_chunks, search_rag as rag_search
 # from backend.routes.ask_openai import router as ask_openai
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
 from pydantic import BaseModel
-from collections import defaultdict
 import os
 import logging
+import tempfile
 
 # --- Setup logging ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -62,30 +62,27 @@ def _close_neo():
 # --- Ingestion endpoint ---
 @app.post("/ingest")
 async def ingest_file(file: UploadFile):
-    temp_path = f"/tmp/{file.filename}"
-    try:
-        with open(temp_path, "wb") as f:
-            f.write(await file.read())
-        logging.info(f"Received file '{file.filename}', saved to {temp_path}")
+    # The client controls file.filename, so only its last path component is
+    # used, and the upload is written inside a fresh temporary directory.
+    safe_name = os.path.basename(file.filename or "") or "upload.pdf"
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        temp_path = os.path.join(tmp_dir, safe_name)
+        try:
+            with open(temp_path, "wb") as f:
+                f.write(await file.read())
+            logging.info(f"Received file '{safe_name}', saved to {temp_path}")
 
-        document_id = ingest_pdf_with_graph(temp_path, neo_driver)
-        if document_id is None:
-            raise HTTPException(status_code=400, detail="Failed to ingest document. Check logs.")
-        logging.info(f"Ingestion successful, document_id={document_id}")
-        return {"status": "success", "document_id": document_id, "filename": file.filename}
+            document_id = ingest_pdf_with_graph(temp_path, neo_driver, title=safe_name)
+            if document_id is None:
+                raise HTTPException(status_code=400, detail="Failed to ingest document. Check logs.")
+            logging.info(f"Ingestion successful, document_id={document_id}")
+            return {"status": "success", "document_id": document_id, "filename": safe_name}
 
-    except Exception as e:
-        logging.error(f"Ingestion error: {e}")
-        raise HTTPException(status_code=500, detail=f"Ingestion error: {e}")
-
-    finally:
-        if os.path.exists(temp_path):
-            try: os.remove(temp_path)
-            except Exception: pass
-        try: 
-            neo_driver.close()
-        except Exception: 
-            pass
+        except HTTPException:
+            raise
+        except Exception as e:
+            logging.error(f"Ingestion error: {e}")
+            raise HTTPException(status_code=500, detail=f"Ingestion error: {e}")
 
 
 # --- Search endpoint (simple vector search) ---
@@ -168,7 +165,6 @@ async def search_with_entities(q: str = Query(..., min_length=1), k: int = 5):
 
     finally:
         conn.close()
-        neo_driver.close()
 
 
 @app.get("/search_docs")
@@ -229,7 +225,6 @@ async def search_docs(q: str = Query(..., min_length=1), top_k_docs: int = 5, to
 
     finally:
         conn.close()
-        neo_driver.close()
 
 
 @app.get("/search_rag")
@@ -248,139 +243,16 @@ def search_rag(
     - chunk_pool: initial number of top chunks to fetch and aggregate by document (larger pool -> better doc ranking)
     - include_entities: whether to return entity lists per document
     """
-    logging.info(f"[search_rag] q='{q}' top_docs={top_docs} top_chunks={top_chunks} chunk_pool={chunk_pool} include_entities={include_entities}")
-
-    # 1) Embed & sanity-check
-    emb = model.encode(q).tolist()
-    if len(emb) != 384:
-        raise HTTPException(status_code=400, detail=f"Embedding dimension mismatch: expected 384, got {len(emb)}")
-
-    conn = get_conn()
-    cur = conn.cursor()
-    try:
-        # 2) Get top chunk_pool chunks (document_id, chunk_id, text, distance)
-        cur.execute(
-            """
-            SELECT c.id::text AS chunk_id,
-                   c.document_id::text AS document_id,
-                   c.ord, 
-                   c.text,
-                   (c.embedding <-> %s::vector) AS distance
-            FROM chunk c
-            ORDER BY c.embedding <-> %s::vector
-            LIMIT %s;
-            """,
-            (emb, emb, chunk_pool)
-        )
-        rows = cur.fetchall()
-        if not rows:
-            raise HTTPException(status_code=404, detail="No chunks found in corpus")
-
-        # 3) Aggregate chunks by document
-        docs_tmp = defaultdict(lambda: {"chunks": [], "agg_scores": []})
-        chunk_ids = []
-        for chunk_id, document_id, ord_, text, distance in rows:
-            docs_tmp[document_id]["chunks"].append({
-                "chunk_id": chunk_id, 
-                "ord": ord_,
-                "text": text, 
-                "distance": float(distance)})
-            docs_tmp[document_id]["agg_scores"].append(float(distance))
-            chunk_ids.append(chunk_id)
-
-        # 4) For each document, keep the best top_chunks by distance, compute average distance
-        docs_list = []
-        for doc_id, info in docs_tmp.items():
-            # sort ascending by distance (smaller = closer)
-            sorted_chunks = sorted(info["chunks"], key=lambda x: x["distance"])[:top_chunks]
-            avg_distance = sum(c["distance"] for c in sorted_chunks) / len(sorted_chunks)
-            docs_list.append({
-                "document_id": doc_id,
-                "avg_distance": avg_distance,
-                "chunks": sorted_chunks
-            })
-
-        # 5) Sort documents by avg_distance and keep top_docs
-        docs_list = sorted(docs_list, key=lambda x: x["avg_distance"])[:top_docs]
-        selected_doc_ids = [d["document_id"] for d in docs_list]
-
-        # 6) Fetch document metadata (title, source_url, sha256)
-        cur.execute(
-            """
-            SELECT id::text, title, source_url, sha256
-            FROM document
-            WHERE id::text = ANY(%s)
-            """,
-            (selected_doc_ids,)
-        )
-        doc_meta_rows = cur.fetchall()
-        meta_map = {r[0]: {"title": r[1], "source_url": r[2], "sha256": r[3]} for r in doc_meta_rows}
-
-        # 7) Optionally, fetch entities from Postgres for the chunks belonging to these documents
-        entities_map = defaultdict(list)  # document_id -> list of {name,type,count}
-        if include_entities:
-            # collect all chunk_ids for selected documents
-            sel_chunk_ids = []
-            for d in docs_list:
-                sel_chunk_ids.extend([c["chunk_id"] for c in d["chunks"]])
-
-            if sel_chunk_ids:
-                # fetch entity names/types grouped by chunk_id
-                # join chunk_entity -> entity
-                cur.execute(
-                    """
-                    SELECT ce.chunk_id::text, e.name, e.type
-                    FROM chunk_entity ce
-                    JOIN entity e ON e.id = ce.entity_id
-                    WHERE ce.chunk_id::text = ANY(%s)
-                    """,
-                    (sel_chunk_ids,)
-                )
-                ent_rows = cur.fetchall()
-                # Map chunk -> entities, then aggregate into document level
-                chunk_to_entities = defaultdict(list)
-                for chunk_id, name, etype in ent_rows:
-                    chunk_to_entities[chunk_id].append({"name": name, "type": etype})
-
-                # attach to docs (document level aggregation, uniqueness)
-                for d in docs_list:
-                    seen = set()
-                    for c in d["chunks"]:
-                        for ent in chunk_to_entities.get(c["chunk_id"], []):
-                            key = (ent["name"], ent["type"])
-                            if key in seen:
-                                continue
-                            seen.add(key)
-                            entities_map[d["document_id"]].append({"name": ent["name"], "type": ent["type"]})
-
-        # 8) Build response combining metadata + chunks + entities
-        results = []
-        for d in docs_list:
-            doc_id = d["document_id"]
-            meta = meta_map.get(doc_id, {})
-            results.append({
-                "document_id": doc_id,
-                "title": meta.get("title"),
-                "source_url": meta.get("source_url"),
-                "sha256": meta.get("sha256"),
-                "avg_distance": d["avg_distance"],
-                "chunks": d["chunks"],
-                "entities": entities_map.get(doc_id, [])
-            })
-
-        return {"query": q, "top_docs": top_docs, "results": results}
-
-    finally:
-        cur.close()
-        conn.close()
-
-import inspect
-logger = logging.getLogger("uvicorn.error")
-logger.info("search_rag ref=%r module=%s", search_rag, getattr(search_rag, "__module__", "?"))
-try:
-    logger.info("search_rag signature: %s", inspect.signature(search_rag))
-except Exception:
-    logger.info("search_rag signature: <unavailable>")
+    result = rag_search(
+        query=q,
+        top_docs=top_docs,
+        top_chunks=top_chunks,
+        chunk_pool=chunk_pool,
+        include_entities=include_entities,
+    )
+    if not result["results"]:
+        raise HTTPException(status_code=404, detail="No chunks found in corpus")
+    return result
 
 
 @app.post("/search_rag_plus_graph")
@@ -390,11 +262,7 @@ def search_rag_plus_graph(body: SearchBody):
     Returns both search hits and a graph of relationships.
     """
     try:
-        # Import search_rag from utils
-        from backend.fastapi.utils import search_rag as rag_search_func
-        
-        # Call search_rag with correct parameters
-        rag = rag_search_func(
+        rag = rag_search(
             query=body.q,           # ✅ Fixed: use 'query' parameter
             top_docs=body.top_k,    # ✅ Number of documents
             top_chunks=3,           # Chunks per document

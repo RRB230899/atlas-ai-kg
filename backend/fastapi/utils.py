@@ -1,5 +1,3 @@
-import os
-import psycopg2
 import torch
 import logging
 from dotenv import load_dotenv
@@ -8,6 +6,8 @@ from sentence_transformers import SentenceTransformer
 from fastapi import HTTPException
 from collections import defaultdict
 from typing import List, Dict
+
+from backend.db import get_conn  # re-exported: other modules import it from here
 
 # -------------------------
 #  LOAD ENV & DEVICE
@@ -28,18 +28,6 @@ model = SentenceTransformer(
     "sentence-transformers/all-MiniLM-L6-v2",
     device=DEVICE
 )
-
-# -------------------------
-#  POSTGRES DATABASE CONNECTION
-# -------------------------
-def get_conn():
-    return psycopg2.connect(
-        dbname=os.getenv("POSTGRES_DBNAME"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD"),
-        host="localhost",
-        port=5432
-    )
 
 # -------------------------
 #  RAG SEARCH FUNCTION

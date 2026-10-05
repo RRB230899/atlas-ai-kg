@@ -3,12 +3,13 @@ import hashlib
 import logging
 
 import fitz  # PyMuPDF
-import psycopg2
 from psycopg2.extras import execute_values
 from dotenv import load_dotenv
 
 import torch
 from sentence_transformers import SentenceTransformer
+
+from backend.db import get_conn
 
 # --- Setup logging ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -32,19 +33,6 @@ model = SentenceTransformer(
 )
 
 # -----------------------------
-#  DATABASE CONNECTION
-# -----------------------------
-def get_conn():
-    return psycopg2.connect(
-        dbname=os.getenv("POSTGRES_DBNAME"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD"),
-        host="localhost",
-        port=5432,
-    )
-
-
-# -----------------------------
 #  TEXT CHUNKING
 # -----------------------------
 def chunk_text(text, size=300, overlap=50):
@@ -63,7 +51,7 @@ def chunk_text(text, size=300, overlap=50):
 # -----------------------------
 #  MAIN INGEST FUNCTION
 # -----------------------------
-def ingest_pdf(path):
+def ingest_pdf(path, title=None):
     """
     Mac version:
     - No large GPU batching (offloaded to Colab later)
@@ -71,6 +59,7 @@ def ingest_pdf(path):
     """
 
     logging.info(f"Starting ingestion for: {path}")
+    title = title or os.path.basename(path)
 
     # --- Extract PDF text ---
     try:
@@ -99,7 +88,7 @@ def ingest_pdf(path):
             ON CONFLICT (sha256) DO UPDATE SET title = EXCLUDED.title
             RETURNING id
             """,
-            (path, "application/pdf", sha),
+            (title, "application/pdf", sha),
         )
         document_id = cur.fetchone()[0]
         logging.info(f"Inserted document → ID: {document_id}")
