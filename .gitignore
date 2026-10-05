@@ -107,3 +107,9 @@ ColBERT
 backend/search/colbert_index/
 experiments/
 collection*.tsv
+
+# -------------------
+# Local backups and archives
+# -------------------
+*.dump
+*.zip

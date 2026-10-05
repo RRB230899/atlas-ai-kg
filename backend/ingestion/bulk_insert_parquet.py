@@ -72,4 +72,8 @@ def bulk_insert(parquet_path):
 
 
 if __name__ == "__main__":
-    bulk_insert("atlas_embeddings.parquet")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Load a chunk-level Parquet export into Postgres.")
+    parser.add_argument("parquet_path", nargs="?", default="atlas_embeddings.parquet")
+    bulk_insert(parser.parse_args().parquet_path)

@@ -1,49 +1,47 @@
-version: '3.8'
+# Local databases for Atlas. The API and the frontend run on the host.
+#
+#   docker compose up -d        start both databases
+#   docker compose down         stop them (data is kept in the volumes)
+#   docker compose down -v      stop them and delete the data
+#
+# Credentials come from .env (see .env.example).
 
 services:
-  # PostgreSQL with pgvector
+  # Postgres 15 with pgvector 0.5.1. Moving an existing data volume to a newer
+  # major version of Postgres needs a dump and restore.
   postgres:
-    image: pgvector/pgvector:pg16
-    container_name: atlas-postgres
+    image: ankane/pgvector:latest
+    container_name: atlas_postgres
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      # Performance tuning for vector operations
-      POSTGRES_SHARED_BUFFERS: 2GB
-      POSTGRES_EFFECTIVE_CACHE_SIZE: 8GB
+      POSTGRES_DB: ${DB_NAME:-atlas}
+      POSTGRES_USER: ${DB_USER:-atlas_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-atlas_user}"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    networks:
-      - atlas-network
+
+  # Neo4j Community: no size cap, and nothing is deleted when it sits idle.
+  # Browser at http://localhost:7474, Bolt at bolt://localhost:7687.
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: atlas_neo4j
+    environment:
+      # Neo4j requires a password of at least 8 characters.
+      NEO4J_AUTH: neo4j/${NEO_PASSWORD:-change_me_please}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    restart: unless-stopped
 
 volumes:
   postgres_data:
-    driver: local
-
-networks:
-  atlas-network:
-    driver: bridge
-
-# Usage:
-# ------
-# 1. Create a .env file with your credentials (see .env.example).
-#
-# Start Postgres with pgvector:
-#   docker compose up -d
-#
-# Stop it:
-#   docker compose down
-#
-# Stop it and delete the data volume:
-#   docker compose down -v
-#
-# The API and the frontend run on the host; see docs/SETUP.md.
+  neo4j_data:
