@@ -100,3 +100,10 @@ Thumbs.db
 ColBERT
 *.parquet
 *.tsv
+
+# -------------------
+# Generated retrieval indexes
+# -------------------
+backend/search/colbert_index/
+experiments/
+collection*.tsv
